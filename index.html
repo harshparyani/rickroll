@@ -9,50 +9,61 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   #overlay { position: fixed; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 22px;
-    background: #0b0b0f; color: #fff; z-index: 2; }
+    background: #0b0b0f; color: #fff; z-index: 3; }
   #overlay h1 { font-size: 2rem; font-weight: 600; margin: 0; }
   #overlay p { color: #9a9aa3; margin: 0; }
   #overlay button { font-size: 1.1rem; padding: 12px 46px; cursor: pointer;
     border: 1px solid #fff; border-radius: 999px; background: transparent; color: #fff; }
   #overlay button:hover { background: #fff; color: #0b0b0f; }
-  #frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: none; }
+  #frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+  #unmute { position: fixed; inset: 0; z-index: 2; display: none;
+    align-items: flex-end; justify-content: center; padding-bottom: 44px;
+    background: transparent; border: 0; cursor: pointer; }
+  #unmute span { background: rgba(0,0,0,.72); color: #fff; padding: 12px 26px;
+    border-radius: 999px; font-size: 1rem; }
 </style>
 </head>
 <body>
+  <iframe id="frame"
+    allow="autoplay; fullscreen"
+    src="https://player.vimeo.com/video/1094756949?loop=1&title=0&byline=0&portrait=0"></iframe>
+
+  <button id="unmute"><span>🔊 tap for sound</span></button>
+
   <div id="overlay">
     <h1>harsh.is</h1>
-    <p>Enter if you're freaky</p>
+    <p>personal site of Harsh Paryani</p>
     <button id="enter">Enter</button>
   </div>
 
-  <iframe id="frame"
-    allow="autoplay; fullscreen"
-    src="https://player.vimeo.com/video/1094756949?autoplay=1&loop=1&title=0&byline=0&portrait=0"
-    tabindex="-1"></iframe>
-
   <script src="https://player.vimeo.com/api/player.js"></script>
   <script>
-    const iframe = document.getElementById("frame");
+    const iframe  = document.getElementById("frame");
     const overlay = document.getElementById("overlay");
-    const player = new Vimeo.Player(iframe);
+    const unmute  = document.getElementById("unmute");
+    const player  = new Vimeo.Player(iframe);
 
-    // If the browser already trusts this domain, roll them instantly on load.
-    player.play().catch(() => {});
-
-    function reveal() {
-      iframe.style.display = "block";
-      iframe.tabIndex = "";
-      overlay.style.display = "none";
+    // Turn sound ON and play — only works when called from inside a tap/click.
+    function goLoud() {
+      player.setVolume(1);
+      player.setMuted(false);
+      return player.play();
     }
 
-    // "Enter" is secretly Play. The click counts as user interaction,
-    // which unlocks sound.
     document.getElementById("enter").addEventListener("click", () => {
-      player.play().catch(() => {});
-      reveal();
+      overlay.style.display = "none";
+      goLoud().catch(() => {});
+      // iPhones may still force mute; check, and if so show a one-tap rescue.
+      setTimeout(() => {
+        player.getMuted().then(m => { if (m) unmute.style.display = "flex"; })
+                         .catch(() => {});
+      }, 500);
     });
 
-    player.on("play", reveal);
+    unmute.addEventListener("click", () => {
+      unmute.style.display = "none";
+      goLoud().catch(() => {});
+    });
   </script>
 </body>
 </html>
